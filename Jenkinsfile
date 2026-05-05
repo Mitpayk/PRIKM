@@ -28,7 +28,7 @@ pipeline {
         }
         stage('Push to DockerHub') {
             steps {
-                withDockerRegistry([ credentialsId: "mitpayk", url: "" ]) {
+                withDockerRegistry([ credentialsId: "docker", url: "" ]) {
                     sh "docker push Mitpayk/prikm:latest"
                     sh "docker push Mitpayk/prikm:${BUILD_NUMBER}"
                 }
