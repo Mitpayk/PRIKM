@@ -23,14 +23,14 @@ pipeline {
             steps {
                 sh 'docker build -t prikm:latest .'
                 sh "docker tag prikm Mitpayk/prikm:latest"
-                sh "docker tag prikm Mitpayk/prikm:$BUILD_NUMBER"
+                sh "docker tag prikm Mitpayk/prikm:${BUILD_NUMBER}"
             }
         }
         stage('Push to DockerHub') {
             steps {
                 withDockerRegistry([ credentialsId: "docker", url: "" ]) {
-                    sh "docker push Mitpayk/prikm:latest"
-                    sh "docker push Mitpayk/prikm:${BUILD_NUMBER}"
+                    sh "docker push mitpayk/prikm:latest"
+                    sh "docker push mitpayk/prikm:${BUILD_NUMBER}"
                 }
             }
         }
