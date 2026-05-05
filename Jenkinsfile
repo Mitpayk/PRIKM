@@ -52,5 +52,12 @@ pipeline {
                 sh 'curl localhost:80'
             }
         }
+       stage('Debug Info') {
+            steps {
+                sh 'echo "BUILD NUMBER = ${BUILD_NUMBER}"'
+                sh 'docker images'
+            }
+        }
     }
 }       
+ 
