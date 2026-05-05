@@ -4,26 +4,38 @@ pipeline {
     stages {
         stage('Start') {
             steps {
-                echo 'Lab_1: nginx/custom'
+                echo 'Starting custom pipeline'
             }
         }
 
-        stage('Build nginx/custom') {
+        stage('Stop old container') {
+            steps {
+                sh 'docker rm -f my_nginx || true'
+            }
+        }
+
+        stage('Build Image') {
             steps {
                 sh 'docker build -t nginx/custom:latest .'
             }
         }
 
-        stage('Test nginx/custom') {
+        stage('Run Container') {
             steps {
-                echo 'Pass'
+                sh 'docker run -d --name my_nginx -p 80:80 nginx/custom:latest'
             }
         }
 
-        stage('Deploy nginx/custom'){
-            steps{
-                sh "docker run -d -p 80:80 nginx/custom:latest"
+        stage('Check Running Containers') {
+            steps {
+                sh 'docker ps'
+            }
+        }
+
+        stage('Test Page') {
+            steps {
+                sh 'curl localhost:80'
             }
         }
     }
-}
+}       
