@@ -21,7 +21,7 @@ pipeline {
 
         stage('Build Image') {
             steps {
-                sh 'docker build -t nginx/prikm:latest .'
+                sh 'docker build -t prikm:latest .'
                 sh "docker tag prikm Mitpayk/prikm:latest"
                 sh "docker tag prikm Mitpayk/prikm:$BUILD_NUMBER"
             }
