@@ -22,6 +22,16 @@ pipeline {
         stage('Build Image') {
             steps {
                 sh 'docker build -t nginx/custom:latest .'
+                sh "docker tag prikm Mitpayk/prikm:latest"
+                sh "docker tag prikm Mitpayk/prikm:$BUILD_NUMBER"
+            }
+        }
+        stage('Push to DockerHub') {
+            steps {
+                withDockerRegistry([ credentialsId: "mitpayk/prikm", url: "" ]) {
+                    sh "docker push Mitpayk/prikm:latest"
+                    sh "docker push Mitpayk/prikm:${BUILD_NUMBER}"
+                }
             }
         }
 
