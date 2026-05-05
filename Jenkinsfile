@@ -22,8 +22,8 @@ pipeline {
         stage('Build Image') {
             steps {
                 sh 'docker build -t prikm:latest .'
-                sh "docker tag prikm Mitpayk/prikm:latest"
-                sh "docker tag prikm Mitpayk/prikm:${BUILD_NUMBER}"
+                sh "docker tag prikm mitpayk/prikm:latest"
+                sh "docker tag prikm mitpayk/prikm:${BUILD_NUMBER}"
             }
         }
         stage('Push to DockerHub') {
