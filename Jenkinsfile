@@ -15,13 +15,13 @@ pipeline {
         }
         stage('Free port 80') {
             steps {
-                sh 'docker stop $(docker ps -q) || true'
+                sh 'docker ps -q | xargs -r docker stop'
             }
         }
 
         stage('Build Image') {
             steps {
-                sh 'docker build -t nginx/custom:latest .'
+                sh 'docker build -t nginx/prikm:latest .'
                 sh "docker tag prikm Mitpayk/prikm:latest"
                 sh "docker tag prikm Mitpayk/prikm:$BUILD_NUMBER"
             }
