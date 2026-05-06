@@ -58,6 +58,7 @@ pipeline {
                 sh 'docker images'
             }
         }
+    }
        post {
             success {
                 notifyEvents(
@@ -70,8 +71,7 @@ pipeline {
                 message: "Build ${BUILD_NUMBER} FAILED",
                 token: 'ct-q5dageamlhvfjlsdlvlanmkxqwcfx'
         )
-    }
-}
+      }
     }
 }       
  
