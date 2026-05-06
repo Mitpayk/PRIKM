@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'VERSION', defaultValue: '${BUILD_NUMBER}', description: 'Docker tag')
+        booleanParam(name: 'BUILD_IMAGE', defaultValue: true, description: '')
+        booleanParam(name: 'PUSH_IMAGE', defaultValue: true, description: '')
+    }
+
     stages {
         stage('Start') {
             steps {
@@ -20,26 +26,32 @@ pipeline {
         }
 
         stage('Build Image') {
-            steps {
-                sh 'docker build -t prikm:latest .'
-                sh "docker tag prikm mitpayk/prikm:latest"
-                sh "docker tag prikm mitpayk/prikm:${BUILD_NUMBER}"
-            }
-        }
+    when {
+        expression { params.BUILD_IMAGE }
+    }
+    steps {
+        sh "docker build -t prikm:${params.VERSION} ."
+        sh "docker tag prikm:${params.VERSION} mitpayk/prikm:latest"
+        sh "docker tag prikm:${params.VERSION} mitpayk/prikm:${params.VERSION}"
+    }
+}
         stage('Push to DockerHub') {
-            steps {
-                withDockerRegistry([ credentialsId: "docker", url: "" ]) {
-                    sh "docker push mitpayk/prikm:latest"
-                    sh "docker push mitpayk/prikm:${BUILD_NUMBER}"
-                }
-            }
+    when {
+        expression { params.PUSH_IMAGE }
+    }
+    steps {
+        withDockerRegistry([ credentialsId: "docker", url: "" ]) {
+            sh "docker push mitpayk/prikm:latest"
+            sh "docker push mitpayk/prikm:${params.VERSION}"
         }
-
+    }
+}
         stage('Run Container') {
-            steps {
-                sh 'docker run -d --name my_nginx -p 80:80 nginx/custom:latest'
-            }
-        }
+    steps {
+        sh 'docker rm -f my_nginx || true'
+        sh 'docker run -d --name my_nginx -p 80:80 prikm:latest'
+    }
+}
 
         stage('Check Running Containers') {
             steps {
