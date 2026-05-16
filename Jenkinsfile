@@ -7,6 +7,11 @@ pipeline {
                 echo 'Starting custom pipeline'
             }
         }
+        stage('Stop old container') {
+            steps {
+                sh 'docker rm -f my_nginx || true'
+            }
+        }
 
         stage('Build Image') {
             steps {
