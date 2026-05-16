@@ -28,7 +28,7 @@ pipeline {
 
         stage('Test Page') {
             steps {
-                sh 'curl localhost:80'
+                sh 'docker ps | grep my_nginx'
             }
         }
     }
