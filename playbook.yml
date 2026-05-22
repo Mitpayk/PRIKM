@@ -1,0 +1,28 @@
+- name: Deploy Containerized App
+  hosts: webservers
+  become: yes
+
+  tasks:
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Run web1 container
+      docker_container:
+        name: web1
+        image: mitpayk/my-nginx:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "8081:80"
+
+    - name: Run web2 container
+      docker_container:
+        name: web2
+        image: mitpayk/my-nginx:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "8082:80"
