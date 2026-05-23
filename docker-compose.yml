@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  mongo-primary:
+    image: mongo:7
+    container_name: mongo-primary
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo/keyfile"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret123
+    volumes:
+      - mongo-primary-data:/data/db
+      - ./mongo-keyfile:/etc/mongo/keyfile:ro
+    ports:
+      - "27017:27017"
+    networks:
+      - mongo-cluster
+
+  mongo-secondary1:
+    image: mongo:7
+    container_name: mongo-secondary1
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo/keyfile"]
+    volumes:
+      - mongo-sec1-data:/data/db
+      - ./mongo-keyfile:/etc/mongo/keyfile:ro
+    ports:
+      - "27018:27017"
+    networks:
+      - mongo-cluster
+
+  mongo-secondary2:
+    image: mongo:7
+    container_name: mongo-secondary2
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo/keyfile"]
+    volumes:
+      - mongo-sec2-data:/data/db
+      - ./mongo-keyfile:/etc/mongo/keyfile:ro
+    ports:
+      - "27019:27017"
+    networks:
+      - mongo-cluster
+
+  backup-service:
+    image: mongo:7
+    container_name: backup-service
+    volumes:
+      - ./backup:/backup
+      - backup-data:/backups
+    command: ["bash", "-c", "while true; do sleep 3600; done"]
+    networks:
+      - mongo-cluster
+
+volumes:
+  mongo-primary-data:
+  mongo-sec1-data:
+  mongo-sec2-data:
+  backup-data:
+
+networks:
+  mongo-cluster:
+    driver: bridge
