@@ -8,7 +8,7 @@ pipeline {
     }
 
     environment {
-        WORK_DIR = '/home/vagrant/term'
+        WORK_DIR = '"$WORKSPACE"'
     }
 
     stages {
