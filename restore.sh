@@ -10,9 +10,7 @@ tar -xzf "$ARCHIVE" -C "$TMPDIR"
 DUMP=$(ls "$TMPDIR")
 
 docker cp "$TMPDIR/$DUMP" mongo-primary:/tmp/restore_dump
-docker exec mongo-primary mongorestore \
-  -u admin -p secret123 --authenticationDatabase admin \
-  --drop /tmp/restore_dump
+docker exec mongo-primary mongorestore --drop /tmp/restore_dump
 
 docker exec mongo-primary rm -rf /tmp/restore_dump
 rm -rf "$TMPDIR"
