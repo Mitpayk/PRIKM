@@ -4,9 +4,6 @@ services:
     image: mongo:4.4
     container_name: mongo-primary
     command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: secret123
     volumes:
       - mongo-primary-data:/data/db
     ports:
