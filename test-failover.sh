@@ -2,7 +2,7 @@
 set -euo pipefail
 
 meval() {
-  docker exec "$1" mongosh --quiet \
+  docker exec "$1" mongo --quiet \
     -u admin -p secret123 --authenticationDatabase admin \
     --eval "$2" 2>/dev/null
 }

@@ -2,12 +2,12 @@
 set -euo pipefail
 
 echo "[*] Waiting for mongo-primary..."
-until docker exec mongo-primary mongosh --quiet \
+until docker exec mongo-primary mongo --quiet \
   --eval "db.adminCommand('ping').ok" 2>/dev/null | grep -q 1; do
   sleep 3
 done
 
-STATUS=$(docker exec mongo-primary mongosh --quiet \
+STATUS=$(docker exec mongo-primary mongo --quiet \
   --eval "try { rs.status().ok } catch(e) { 0 }" 2>/dev/null)
 
 if [[ "$STATUS" == "1" ]]; then
@@ -15,7 +15,7 @@ if [[ "$STATUS" == "1" ]]; then
   exit 0
 fi
 
-docker exec mongo-primary mongosh \
+docker exec mongo-primary mongo \
   --eval '
     rs.initiate({
       _id: "rs0",
@@ -28,7 +28,7 @@ docker exec mongo-primary mongosh \
   '
 
 sleep 10
-docker exec mongo-primary mongosh --quiet \
+docker exec mongo-primary mongo --quiet \
   --eval 'rs.status().members.forEach(m => print(m.name, "->", m.stateStr))'
 
 echo "[+] Done"
