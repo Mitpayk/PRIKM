@@ -1,7 +1,6 @@
 - name: Deploy Containerized App
   hosts: webservers
   become: yes
-
   tasks:
     - name: Start Docker service
       service:
@@ -9,20 +8,30 @@
         state: started
         enabled: yes
 
-    - name: Run web1 container
+    - name: Run container
       docker_container:
-        name: web1
+        name: "{{ inventory_hostname }}"
         image: mitpayk/my-nginx:latest
         state: started
         restart_policy: always
         ports:
-          - "8081:80"
+          - "{{ container_port }}:80"
 
-    - name: Run web2 container
-      docker_container:
-        name: web2
-        image: mitpayk/my-nginx:latest
-        state: started
-        restart_policy: always
-        ports:
-          - "8082:80"
+    - name: Create index.html from template
+      template:
+        src: templates/index.html.j2
+        dest: /tmp/index_{{ inventory_hostname }}.html
+
+    - name: Create nginx.conf from template
+      template:
+        src: templates/nginx.conf.j2
+        dest: /tmp/nginx_{{ inventory_hostname }}.conf
+
+    - name: Copy index.html into container
+      shell: docker cp /tmp/index_{{ inventory_hostname }}.html {{ inventory_hostname }}:/usr/share/nginx/html/index.html
+
+    - name: Copy nginx config into container
+      shell: docker cp /tmp/nginx_{{ inventory_hostname }}.conf {{ inventory_hostname }}:/etc/nginx/conf.d/default.conf
+
+    - name: Reload nginx
+      shell: docker exec {{ inventory_hostname }} nginx -s reload
