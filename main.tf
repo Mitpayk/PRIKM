@@ -40,8 +40,8 @@ output "server_ip" {
 
 output "ansible_inventory" {
   value = <<-EOT
-[webservers]
-web1 ansible_host=127.0.0.1 ansible_connection=local
-web2 ansible_host=127.0.0.1 ansible_connection=local
-EOT
+    [webservers]
+    web1 ansible_host=127.0.0.1 ansible_connection=local container_port=8081
+    web2 ansible_host=127.0.0.1 ansible_connection=local container_port=8082
+  EOT
 }
