@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/notify.sh"
 
 echo "[*] Waiting for mongo-primary..."
 until docker exec mongo-primary mongo --quiet \
@@ -15,20 +16,19 @@ if [[ "$STATUS" == "1" ]]; then
   exit 0
 fi
 
-docker exec mongo-primary mongo \
-  --eval '
-    rs.initiate({
-      _id: "rs0",
-      members: [
-        { _id: 0, host: "mongo-primary:27017", priority: 2 },
-        { _id: 1, host: "mongo-secondary1:27017", priority: 1 },
-        { _id: 2, host: "mongo-secondary2:27017", priority: 1 }
-      ]
-    })
-  '
+docker exec mongo-primary mongo --eval '
+  rs.initiate({
+    _id: "rs0",
+    members: [
+      { _id: 0, host: "mongo-primary:27017",    priority: 2 },
+      { _id: 1, host: "mongo-secondary1:27017", priority: 1 },
+      { _id: 2, host: "mongo-secondary2:27017", priority: 1 }
+    ]
+  })'
 
 sleep 10
 docker exec mongo-primary mongo --quiet \
   --eval 'rs.status().members.forEach(m => print(m.name, "->", m.stateStr))'
 
+notify "Cluster deployed" "ReplicaSet rs0 ініціалізовано: primary + 2 secondary"
 echo "[+] Done"

@@ -2,13 +2,19 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'ACTION',
-               choices: ['deploy', 'backup', 'restore', 'test-failover', 'teardown'],
-               description: 'Що виконати')
+        choice(
+            name: 'ACTION',
+            choices: ['deploy', 'backup', 'restore', 'test-failover', 'teardown'],
+            description: 'Оберіть дію'
+        )
+        string(
+            name: 'RESTORE_FILE',
+            defaultValue: '',
+            description: 'Файл для restore (порожньо = останній backup)'
+        )
     }
 
     stages {
-
         stage('Pre-flight') {
             steps {
                 sh 'docker --version && docker compose version'
@@ -38,7 +44,13 @@ pipeline {
         stage('Restore') {
             when { expression { params.ACTION == 'restore' } }
             steps {
-                sh 'bash restore.sh'
+                sh """
+                    if [ -n "${params.RESTORE_FILE}" ]; then
+                        bash restore.sh backup/${params.RESTORE_FILE}
+                    else
+                        bash restore.sh
+                    fi
+                """
             }
         }
 
@@ -52,12 +64,25 @@ pipeline {
         stage('Teardown') {
             when { expression { params.ACTION == 'teardown' } }
             steps {
+                input message: 'Видалити кластер разом з даними?', ok: 'Так, видалити'
                 sh 'docker compose down -v'
             }
         }
     }
 
     post {
+        success {
+            notifyEvents(
+                message: "Build ${BUILD_NUMBER} [${params.ACTION}] SUCCESS",
+                token: 'ct-q5dageamlhvfjlsdlvlanmkxqwcfx'
+            )
+        }
+        failure {
+            notifyEvents(
+                message: "Build ${BUILD_NUMBER} [${params.ACTION}] FAILED",
+                token: 'ct-q5dageamlhvfjlsdlvlanmkxqwcfx'
+            )
+        }
         always {
             sh 'docker ps --filter "name=mongo" --format "table {{.Names}}\t{{.Status}}" || true'
         }
