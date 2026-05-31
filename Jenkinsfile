@@ -64,7 +64,6 @@ pipeline {
         stage('Teardown') {
             when { expression { params.ACTION == 'teardown' } }
             steps {
-                input message: 'Видалити кластер разом з даними?', ok: 'Так, видалити'
                 sh 'docker compose down -v'
             }
         }
