@@ -4,30 +4,41 @@ source "$(dirname "$0")/notify.sh"
 
 meval() { docker exec "$1" mongo --quiet --eval "$2" 2>/dev/null || true; }
 
-meval mongo-primary 'rs.status().members.forEach(m => print(m.name, "->", m.stateStr))'
-meval mongo-primary 'db.getSiblingDB("testdb").col.insertOne({msg:"before-failover"})'
+# --- початковий стан ---
+STATUS_BEFORE=$(meval mongo-primary 'rs.status().members.map(m => m.name + " [" + m.stateStr + "]").join("\n")')
 DOCS_BEFORE=$(meval mongo-primary 'db.getSiblingDB("testdb").col.countDocuments()')
-echo "Docs before: $DOCS_BEFORE"
+echo "=== Status before failover ==="
+echo "$STATUS_BEFORE"
+echo "Docs: $DOCS_BEFORE"
 
-notify "Failover test" "Зупинка mongo-primary. Документів: $DOCS_BEFORE"
+meval mongo-primary 'db.getSiblingDB("testdb").col.insertOne({msg:"before-failover"})'
+notify "Failover: starting" "Стан до тесту:\n$STATUS_BEFORE\nДокументів: $DOCS_BEFORE"
+
+# --- зупиняємо primary ---
 docker stop mongo-primary
-echo "Waiting for new primary election..."
+notify "Failover: mongo-primary DOWN" "mongo-primary зупинено, очікуємо вибори нового лідера..."
+echo "Waiting for election..."
 sleep 30
 
-meval mongo-secondary1 'rs.status().members.forEach(m => print(m.name, "->", m.stateStr))'
+# --- хто став новим primary ---
+NEW_PRIMARY=$(meval mongo-secondary1 'rs.status().members.filter(m => m.stateStr === "PRIMARY").map(m => m.name)[0]')
+STATUS_AFTER=$(meval mongo-secondary1 'rs.status().members.map(m => m.name + " [" + m.stateStr + "]").join("\n")')
+echo "=== Status after failover ==="
+echo "$STATUS_AFTER"
+
 meval mongo-secondary1 'db.getSiblingDB("testdb").col.insertOne({msg:"after-failover"})'
 DOCS_AFTER=$(meval mongo-secondary1 'db.getSiblingDB("testdb").col.countDocuments()')
-STATUS=$(meval mongo-secondary1 'rs.status().members.map(m => m.name + ": " + m.stateStr).join(", ")')
-echo "Docs after: $DOCS_AFTER"
 
-notify "Failover: primary DOWN" "Стан: $STATUS | Документів: $DOCS_AFTER"
+notify "Failover: new PRIMARY elected" "Новий primary: $NEW_PRIMARY\n\nСтан кластеру:\n$STATUS_AFTER\n\nДокументів після failover: $DOCS_AFTER"
 
+# --- повертаємо primary ---
 docker start mongo-primary
 echo "Waiting for primary to rejoin..."
 sleep 30
 
-meval mongo-primary 'rs.status().members.forEach(m => print(m.name, "->", m.stateStr))'
-STATUS_FINAL=$(meval mongo-primary 'rs.status().members.map(m => m.name + ": " + m.stateStr).join(", ")')
+STATUS_FINAL=$(meval mongo-primary 'rs.status().members.map(m => m.name + " [" + m.stateStr + "]").join("\n")')
+echo "=== Final status ==="
+echo "$STATUS_FINAL"
 
-notify "Failover test PASSED" "mongo-primary повернувся | $STATUS_FINAL"
+notify "Failover: mongo-primary BACK" "mongo-primary повернувся як SECONDARY\n\nФінальний стан:\n$STATUS_FINAL"
 echo "=== FAILOVER TEST PASSED ==="
