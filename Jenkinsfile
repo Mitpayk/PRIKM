@@ -30,6 +30,12 @@ pipeline {
                 sh 'sleep 20'
                 sh 'docker compose ps'
                 sh 'bash init-replicaset.sh'
+                sh '''
+                    kill $(cat monitor.pid 2>/dev/null) 2>/dev/null || true
+                    nohup bash monitor.sh > monitor.log 2>&1 &
+                    echo $! > monitor.pid
+                    echo "[+] Monitor started (PID $(cat monitor.pid))"
+                '''
             }
         }
 
@@ -64,6 +70,11 @@ pipeline {
         stage('Teardown') {
             when { expression { params.ACTION == 'teardown' } }
             steps {
+                sh '''
+                    kill $(cat monitor.pid 2>/dev/null) 2>/dev/null || true
+                    rm -f monitor.pid
+                    echo "[+] Monitor stopped"
+                '''
                 sh 'docker compose down -v'
             }
         }
