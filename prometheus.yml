@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'mongodb-primary'
+    static_configs:
+      - targets: ['mongo-exporter-primary:9216']
+        labels:
+          instance: 'mongo-primary'
+          role: 'primary'
+
+  - job_name: 'mongodb-secondary1'
+    static_configs:
+      - targets: ['mongo-exporter-secondary1:9216']
+        labels:
+          instance: 'mongo-secondary1'
+          role: 'secondary'
+
+  - job_name: 'mongodb-secondary2'
+    static_configs:
+      - targets: ['mongo-exporter-secondary2:9216']
+        labels:
+          instance: 'mongo-secondary2'
+          role: 'secondary'

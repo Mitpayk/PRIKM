@@ -1,5 +1,6 @@
 version: '3.8'
 services:
+
   mongo-primary:
     image: mongo:4.4
     container_name: mongo-primary
@@ -48,33 +49,82 @@ services:
       timeout: 5s
       retries: 5
 
-  webapp:
-    build: .
-    container_name: mongo-webapp
+  mongo-exporter-primary:
+    image: percona/mongodb_exporter:0.40
+    container_name: mongo-exporter-primary
+    command:
+      - "--mongodb.uri=mongodb://mongo-primary:27017"
+      - "--collect-all"
+      - "--compatible-mode"
     ports:
-      - "3000:3000"
-    environment:
-      MONGO_URI: "mongodb://mongo-primary:27017,mongo-secondary1:27017,mongo-secondary2:27017/?replicaSet=rs0&readPreference=primaryPreferred"
+      - "9216:9216"
     depends_on:
       - mongo-primary
+    networks:
+      - mongo-cluster
+
+  mongo-exporter-secondary1:
+    image: percona/mongodb_exporter:0.40
+    container_name: mongo-exporter-secondary1
+    command:
+      - "--mongodb.uri=mongodb://mongo-secondary1:27017"
+      - "--collect-all"
+      - "--compatible-mode"
+    ports:
+      - "9217:9216"
+    depends_on:
       - mongo-secondary1
+    networks:
+      - mongo-cluster
+
+  mongo-exporter-secondary2:
+    image: percona/mongodb_exporter:0.40
+    container_name: mongo-exporter-secondary2
+    command:
+      - "--mongodb.uri=mongodb://mongo-secondary2:27017"
+      - "--collect-all"
+      - "--compatible-mode"
+    ports:
+      - "9218:9216"
+    depends_on:
       - mongo-secondary2
     networks:
       - mongo-cluster
-    restart: unless-stopped
 
-  mongo-express:
-    image: mongo-express:latest
-    container_name: mongo-express
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
     ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_SERVER: mongo-primary
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+      - "9090:9090"
     depends_on:
-      - mongo-primary
+      - mongo-exporter-primary
+      - mongo-exporter-secondary1
+      - mongo-exporter-secondary2
+    networks:
+      - mongo-cluster
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./grafana-dashboard-provider.yml:/etc/grafana/provisioning/dashboards/provider.yml
+      - ./mongodb-ha.json:/etc/grafana/provisioning/dashboards/mongodb-ha.json
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
     networks:
       - mongo-cluster
 
@@ -82,6 +132,8 @@ volumes:
   mongo-primary-data:
   mongo-sec1-data:
   mongo-sec2-data:
+  prometheus-data:
+  grafana-data:
 
 networks:
   mongo-cluster:
