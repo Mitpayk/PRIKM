@@ -6,10 +6,10 @@ BACKUP_DIR="$(dirname "$0")/backup"
 mkdir -p "$BACKUP_DIR"
 TS=$(date +"%Y%m%d_%H%M%S")
  
-notify "Backup started" "Розпочато резервне копіювання $TS"
+notify "Bacup" "Backupping $TS"
  
 if ! docker exec mongo-primary mongodump --out /tmp/dump_$TS; then
-  notify "Backup FAILED" "mongodump завершився з помилкою"
+  notify "Backup FAILED" "fail"
   exit 1
 fi
  
@@ -20,6 +20,6 @@ tar -czf "$BACKUP_DIR/backup_$TS.tar.gz" -C "$BACKUP_DIR" "dump_$TS"
 rm -rf "$BACKUP_DIR/dump_$TS"
 ls -t "$BACKUP_DIR"/*.tar.gz | tail -n +6 | xargs rm -f 2>/dev/null || true
  
-notify "Backup done" "Файл: backup_$TS.tar.gz"
+notify "Backup done" " backup_$TS.tar.gz"
 echo "[+] Backup: $BACKUP_DIR/backup_$TS.tar.gz"
  
