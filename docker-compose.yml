@@ -117,8 +117,8 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin123
       GF_AUTH_ANONYMOUS_ENABLED: "false"
     volumes:
-      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
-      - ./grafana-dashboard-provider.yml:/etc/grafana/provisioning/dashboards/provider.yml
+      - ./grafana_source.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./grafana_dashboard.yml:/etc/grafana/provisioning/dashboards/provider.yml
       - ./mongodb-ha.json:/etc/grafana/provisioning/dashboards/mongodb-ha.json
       - grafana-data:/var/lib/grafana
     ports:
