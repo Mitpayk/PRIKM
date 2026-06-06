@@ -10,6 +10,11 @@ services:
       - "27017:27017"
     networks:
       - mongo-cluster
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet localhost/test
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo-secondary1:
     image: mongo:4.4
@@ -21,6 +26,11 @@ services:
       - "27018:27017"
     networks:
       - mongo-cluster
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet localhost/test
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo-secondary2:
     image: mongo:4.4
@@ -32,6 +42,26 @@ services:
       - "27019:27017"
     networks:
       - mongo-cluster
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo --quiet localhost/test
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  webapp:
+    build: ./webapp
+    container_name: mongo-webapp
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: "mongodb://mongo-primary:27017,mongo-secondary1:27017,mongo-secondary2:27017/?replicaSet=rs0&readPreference=primaryPreferred"
+    depends_on:
+      - mongo-primary
+      - mongo-secondary1
+      - mongo-secondary2
+    networks:
+      - mongo-cluster
+    restart: unless-stopped
 
   mongo-express:
     image: mongo-express:latest

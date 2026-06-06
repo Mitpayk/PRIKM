@@ -1,0 +1,13 @@
+{
+  "name": "mongo-ha-webapp",
+  "version": "1.0.0",
+  "description": "Web app for MongoDB HA demo",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongodb": "^5.9.0"
+  }
+}
