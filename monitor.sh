@@ -7,7 +7,7 @@ declare -A PREV_STATE
 echo "[*] Starting MongoDB container monitor..."
 notify "Monitor started" "Слідкую за: ${CONTAINERS[*]}"
 
-# запам'ятовуємо початковий стан
+
 for c in "${CONTAINERS[@]}"; do
   PREV_STATE[$c]=$(docker inspect -f '{{.State.Running}}' "$c" 2>/dev/null || echo "false")
 done
